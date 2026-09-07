@@ -45,6 +45,9 @@ jobs:
       - name: go vet
         run: go vet ./...
 
+      - name: All CLIs compile
+        run: make binaries
+
       - name: go mod tidy is clean
         run: |
           go mod tidy
@@ -80,21 +83,22 @@ jobs:
           git config --global init.defaultBranch main
 
       - name: Build
-        run: go build ./...
+        run: make build
 
       - name: Test
-        run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+        run: make test
 
-      - name: Coverage summary
+      - name: Coverage
         if: matrix.os == 'ubuntu-latest' && matrix.go == '1.23.x'
         run: |
-          go tool cover -func=coverage.out | tee /tmp/cover.txt
-          total="$(grep -E '^total:' /tmp/cover.txt | awk '{print $3}')"
+          make cover-check | tee /tmp/cover.txt
+          go tool cover -func=coverage.out > /tmp/cover-func.txt
+          total="$(awk '/^total:/ {print $3}' /tmp/cover-func.txt)"
           {
-            echo "### Coverage: ${total}"
+            echo "### Coverage: ${total} of ./pkg/..."
             echo ""
             echo '```'
-            cat /tmp/cover.txt
+            cat /tmp/cover-func.txt
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
