@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/example/gitops-ai-platform/pkg/manifest"
+	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/manifest"
 )
 
 // WriteRequest describes what to commit and where.

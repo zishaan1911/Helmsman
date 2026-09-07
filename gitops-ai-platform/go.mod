@@ -1,3 +1,3 @@
-module github.com/example/gitops-ai-platform
+module github.com/zishaan1911/Helmsman/gitops-ai-platform
 
-go 1.22.2
+go 1.23
