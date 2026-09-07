@@ -21,9 +21,10 @@ First tagged release. The pipeline was feature-complete before this; what
 ### Added
 
 - **Helmsman branding** — the project has a name, a mark, a wordmark and a
-  colour system. Teal for the deterministic machinery, brass for anything
-  AI-assisted; that split is the design decision the whole project rests on,
-  so it is carried consistently through the logo, the README and the site.
+  colour system: black, white and the greys between them, and no hue at all.
+  Emphasis comes from brightness and weight, which is also how the site
+  distinguishes the two AI-assisted pipeline stages from the four
+  deterministic ones.
 - **Landing page** at
   <https://zishaan1911.github.io/Helmsman/> —
   a single self-contained page, deployed by a workflow that verifies every
