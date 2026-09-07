@@ -1,0 +1,11 @@
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.svg text eol=lf
+
+# Keep the vendored example workflow out of GitHub's language stats, and
+# mark generated examples so they don't skew the repo's language bar.
+gitops-ai-platform/examples/** linguist-documentation
+docs/** linguist-documentation
