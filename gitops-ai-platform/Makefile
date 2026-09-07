@@ -13,6 +13,10 @@ COVER_PKGS := ./pkg/...
 # improves; never lower it to make a red build green.
 COVER_MIN  := 80
 
+# Pinned so a govulncheck release that needs a newer Go than this module
+# declares cannot silently switch the toolchain out from under the scan.
+GOVULNCHECK_VERSION := v1.7.0
+
 .DEFAULT_GOAL := help
 
 .PHONY: help
@@ -68,7 +72,7 @@ lint: ## Check formatting and run go vet
 
 .PHONY: vuln
 vuln: ## Scan for known vulnerabilities
-	go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+	go run golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION) ./...
 
 .PHONY: tidy
 tidy: ## Tidy go.mod

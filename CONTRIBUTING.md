@@ -5,7 +5,7 @@ getting set up should take under a minute.
 
 ## Prerequisites
 
-- Go 1.23 or newer
+- Go 1.25 or newer
 - `git`
 - `kubectl` — only needed to exercise `cmd/health-watcher` against a real
   cluster. The test suite does not require it.
