@@ -1,0 +1,72 @@
+name: Bug report
+description: Something behaves differently than documented
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For anything security-sensitive, please use
+        [private reporting](https://github.com/zishaan1911/Helmsman/security/advisories/new)
+        instead of this form.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - cmd/pipeline
+        - cmd/risk-reviewer
+        - cmd/health-watcher
+        - cmd/detector
+        - cmd/containerizer
+        - cmd/manifest-generator
+        - cmd/gitops-writer
+        - deploy/ (Dockerfile or K8s manifests)
+        - docs
+        - other / not sure
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `<binary> -version`, or the commit SHA you built from.
+      placeholder: v1.0.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: What did you run?
+      description: The exact command, with flags. Redact anything secret.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead?
+      description: Include the full output or error.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: |
+        Go version, OS, and — if relevant — Kubernetes and ArgoCD/Flux versions.
+      placeholder: |
+        go version go1.23.0 linux/amd64
+        Kubernetes v1.30, ArgoCD 2.11
