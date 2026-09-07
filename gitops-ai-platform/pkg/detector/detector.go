@@ -231,25 +231,44 @@ func findFastAPIApp(repoPath string) string {
 	return "main:app"
 }
 
+// springBootMarkers are the spellings a Spring Boot project actually uses.
+// Maven POMs name the starter parent or the plugin artifact ("spring-boot"),
+// while Gradle builds apply the plugin by its reverse-DNS id
+// ("org.springframework.boot") and never contain the hyphenated form at all.
+// Matching only the Maven spelling silently downgraded every Gradle Spring
+// Boot service to a generic Java build.
+var springBootMarkers = []string{"spring-boot", "org.springframework.boot"}
+
 func detectJava(repoPath string) (ServiceInfo, error) {
 	info := ServiceInfo{Language: "java", Port: 8080, Confidence: "medium"}
+
+	var buildFiles []string
 	if fileExists(filepath.Join(repoPath, "pom.xml")) {
 		info.BuildTool = "maven"
 		info.Entrypoint = "java -jar target/*.jar"
-		data, _ := os.ReadFile(filepath.Join(repoPath, "pom.xml"))
-		if strings.Contains(string(data), "spring-boot") {
-			info.Framework = "spring-boot"
-			info.Confidence = "high"
-		}
+		buildFiles = []string{"pom.xml"}
 	} else {
 		info.BuildTool = "gradle"
 		info.Entrypoint = "java -jar build/libs/*.jar"
-		data, _ := os.ReadFile(filepath.Join(repoPath, "build.gradle"))
-		if strings.Contains(string(data), "spring-boot") {
-			info.Framework = "spring-boot"
-			info.Confidence = "high"
+		// Both DSLs are in languageMarkers, so both have to be read here.
+		buildFiles = []string{"build.gradle", "build.gradle.kts"}
+	}
+
+	for _, name := range buildFiles {
+		data, err := os.ReadFile(filepath.Join(repoPath, name))
+		if err != nil {
+			continue
+		}
+		contents := string(data)
+		for _, marker := range springBootMarkers {
+			if strings.Contains(contents, marker) {
+				info.Framework = "spring-boot"
+				info.Confidence = "high"
+				return info, nil
+			}
 		}
 	}
+
 	return info, nil
 }
 
