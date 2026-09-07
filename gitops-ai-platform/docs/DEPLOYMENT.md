@@ -44,17 +44,45 @@ The platform will create `apps/<name>/<env>/{deployment,service,ingress,kustomiz
 
 Generate a token ArgoCD and your CI can both use to read/write it (a GitHub fine-grained PAT scoped to just this repo, or a deploy key). Store it as `GITOPS_REPO_TOKEN` in each app repo's secrets (step 5) and give ArgoCD read access to it (step 3).
 
-## 3. Build and publish the platform image
+## 3. Get the platform image
+
+Released images are published to GHCR for linux/amd64 and linux/arm64:
+
+```bash
+docker pull ghcr.io/zishaan1911/helmsman:v1.0.0
+```
+
+Pin the tag rather than tracking `latest`. This image writes to your deploy
+repo; you want to know exactly which build did it, and `helmsman:v1.0.0`
+answers that while `helmsman:latest` does not.
+
+The image contains all seven CLIs at `/app/<name>` — `pipeline`,
+`risk-reviewer`, `health-watcher`, `detector`, `containerizer`,
+`manifest-generator`, `gitops-writer` — plus `git` and a pinned `kubectl`.
+CI workflows and the in-cluster CronJob both pull this one image. Every
+binary answers `-version` with its tag, commit and build date, which is the
+first thing to check when a manifest looks wrong.
+
+If you'd rather mirror it into your own registry — most organisations
+should, so a cluster rollout doesn't depend on GHCR being reachable:
+
+```bash
+docker pull ghcr.io/zishaan1911/helmsman:v1.0.0
+docker tag  ghcr.io/zishaan1911/helmsman:v1.0.0 registry.your-org.com/helmsman:v1.0.0
+docker push registry.your-org.com/helmsman:v1.0.0
+```
+
+Or build it yourself from a checkout, stamping the version so the binaries
+still identify themselves:
 
 ```bash
 cd gitops-ai-platform
-docker build -t ghcr.io/your-org/gitops-ai-platform:latest -f deploy/Dockerfile .
-docker push ghcr.io/your-org/gitops-ai-platform:latest
+docker build -f deploy/Dockerfile \
+  --build-arg VERSION="$(git describe --tags --always)" \
+  --build-arg COMMIT="$(git rev-parse HEAD)" \
+  --build-arg DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  -t registry.your-org.com/helmsman:local .
 ```
-
-This image contains all the CLIs (`pipeline`, `risk-reviewer`, `health-watcher`, `detector`, `containerizer`, `manifest-generator`, `gitops-writer`) at `/app/<name>`. CI workflows and the in-cluster CronJob both pull this one image.
-
-*(CI for this repo — `.github/workflows/ci.yml` and `codeql.yml` — already builds/tests/scans it on every push; wire a release step there to push this image automatically once you're past the initial manual setup.)*
 
 ## 4. Deploy `health-watcher` into the cluster
 

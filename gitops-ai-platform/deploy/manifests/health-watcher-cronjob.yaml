@@ -39,7 +39,7 @@ spec:
           restartPolicy: Never
           containers:
             - name: health-watcher
-              image: ghcr.io/your-org/gitops-ai-platform:latest
+              image: ghcr.io/zishaan1911/helmsman:v1.0.0
               command: ["/bin/sh", "-c"]
               args:
                 - |
