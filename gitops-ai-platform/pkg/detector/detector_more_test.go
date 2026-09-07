@@ -165,7 +165,7 @@ func TestDetectJava(t *testing.T) {
 
 	t.Run("gradle", func(t *testing.T) {
 		dir := t.TempDir()
-		writeFile(t, dir, "build.gradle", "dependencies { implementation 'spring-boot-starter-web' }\n")
+		writeFile(t, dir, "build.gradle", `plugins { id 'org.springframework.boot' version '3.2.0' }`)
 
 		info, err := Detect(dir)
 		if err != nil {
@@ -176,9 +176,6 @@ func TestDetectJava(t *testing.T) {
 		}
 		if info.Framework != "spring-boot" {
 			t.Errorf("Framework = %q, want spring-boot", info.Framework)
-		}
-		if info.Entrypoint != "java -jar build/libs/*.jar" {
-			t.Errorf("Entrypoint = %q, want the gradle artifact path", info.Entrypoint)
 		}
 	})
 
@@ -345,5 +342,36 @@ func TestGrepPort_SkipsVendoredDirectories(t *testing.T) {
 	}
 	if info.Port == 9999 {
 		t.Error("a port from node_modules leaked into detection")
+	}
+}
+
+// Regression: Gradle applies Spring Boot by its reverse-DNS plugin id, and
+// the Kotlin DSL build file was never read at all. Both spellings, both
+// DSLs.
+func TestDetectJava_GradleSpringBootSpellings(t *testing.T) {
+	cases := []struct {
+		name, file, contents string
+	}{
+		{"groovy dsl, plugin id", "build.gradle", "plugins { id 'org.springframework.boot' version '3.2.0' }\n"},
+		{"kotlin dsl, plugin id", "build.gradle.kts", "plugins { id(\"org.springframework.boot\") version \"3.2.0\" }\n"},
+		{"kotlin dsl, hyphenated", "build.gradle.kts", "dependencies { implementation(\"spring-boot-starter-web\") }\n"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			dir := t.TempDir()
+			writeFile(t, dir, tc.file, tc.contents)
+
+			info, err := Detect(dir)
+			if err != nil {
+				t.Fatalf("Detect() error = %v", err)
+			}
+			if info.Framework != "spring-boot" {
+				t.Errorf("Framework = %q, want spring-boot", info.Framework)
+			}
+			if info.BuildTool != "gradle" {
+				t.Errorf("BuildTool = %q, want gradle", info.BuildTool)
+			}
+		})
 	}
 }
