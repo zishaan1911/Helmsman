@@ -12,7 +12,7 @@
 #     --build-arg DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
 #     -t ghcr.io/zishaan1911/helmsman:v1.0.0 .
 
-ARG GO_VERSION=1.23
+ARG GO_VERSION=1.25
 ARG ALPINE_VERSION=3.20
 
 # --platform=$BUILDPLATFORM keeps the toolchain native and cross-compiles

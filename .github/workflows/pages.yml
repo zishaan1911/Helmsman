@@ -57,7 +57,14 @@ jobs:
           done
           exit $status
 
+      # enablement: true turns Pages on via the API if it isn't already,
+      # instead of failing with "Get Pages site failed … Not Found". Without
+      # it this workflow can only ever run after someone has clicked through
+      # Settings → Pages by hand, which is a poor thing for a deploy to
+      # depend on. The `pages: write` permission above is what authorises it.
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:

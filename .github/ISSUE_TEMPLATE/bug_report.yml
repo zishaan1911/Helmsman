@@ -68,5 +68,5 @@ body:
       description: |
         Go version, OS, and — if relevant — Kubernetes and ArgoCD/Flux versions.
       placeholder: |
-        go version go1.23.0 linux/amd64
+        go version go1.25.13 linux/amd64
         Kubernetes v1.30, ArgoCD 2.11

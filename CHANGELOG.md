@@ -13,6 +13,35 @@ CLIs are what most people depend on.
 
 ## [Unreleased]
 
+### Changed
+
+- **Minimum Go is now 1.25.** The first CI run on the merged branches failed
+  `govulncheck` with 25 reachable standard-library advisories — quadratic
+  `net/url` path resolution, unbounded post-handshake messages and an ECH
+  privacy leak in `crypto/tls`, unbounded recursion in `encoding/asn1`,
+  quadratic name-constraint checking in `crypto/x509` — all of them present in
+  the Go 1.23 standard library and fixed in 1.24.8 through 1.25.13. Nothing in
+  this repository was at fault; the toolchain floor was.
+
+  Raising it was the honest fix rather than an exclusion list. This project
+  ships a blocking vulnerability gate as a feature, so declaring a minimum
+  below the line where those advisories are fixed would mean `make vuln` fails
+  for anyone building on the version we advertise.
+
+- **`govulncheck` is pinned to v1.7.0 and no longer installed with `@latest`.**
+  `@latest` resolved to a release requiring a newer Go than the module
+  declared, so the toolchain silently switched mid-job — meaning the scan
+  examined a different standard library than the one CI actually builds and
+  ships with. It now runs via `go run …@v1.7.0`, with the version set once in
+  the Makefile.
+
+### Fixed
+
+- **The Pages deploy could never run on a fresh repository.**
+  `actions/configure-pages` failed with `Get Pages site failed … Not Found`
+  because Pages had not been switched on by hand in Settings. It now passes
+  `enablement: true`, so the workflow turns Pages on itself.
+
 ## [1.0.0] - 2026-09-07
 
 First tagged release. The pipeline was feature-complete before this; what

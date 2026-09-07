@@ -20,7 +20,7 @@
   <a href="https://github.com/zishaan1911/Helmsman/actions/workflows/ci.yml"><img src="https://github.com/zishaan1911/Helmsman/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/zishaan1911/Helmsman/actions/workflows/codeql.yml"><img src="https://github.com/zishaan1911/Helmsman/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"></a>
   <a href="https://github.com/zishaan1911/Helmsman/releases/latest"><img src="https://img.shields.io/github/v/release/zishaan1911/Helmsman?color=3a3a3c&label=release" alt="Latest release"></a>
-  <img src="https://img.shields.io/badge/go-1.23%2B-3a3a3c" alt="Go 1.23+">
+  <img src="https://img.shields.io/badge/go-1.25%2B-3a3a3c" alt="Go 1.25+">
   <img src="https://img.shields.io/badge/dependencies-0-3a3a3c" alt="Zero dependencies">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-3a3a3c" alt="MIT"></a>
 </p>
@@ -60,7 +60,7 @@ Download an archive from [the latest release][releases] — each one contains
 all seven CLIs — or:
 
 ```bash
-# One command, with Go 1.23+
+# One command, with Go 1.25+
 go install github.com/zishaan1911/Helmsman/gitops-ai-platform/cmd/pipeline@v1.0.0
 
 # Or the container image, which carries all seven plus git and kubectl
@@ -71,7 +71,7 @@ Every binary reports what it is:
 
 ```console
 $ pipeline -version
-helmsman pipeline v1.0.0 (commit 9f3c1b2a4d5e, built 2026-09-07T09:14:22Z, go1.23.0, linux/amd64)
+helmsman pipeline v1.0.0 (commit 9f3c1b2a4d5e, built 2026-09-07T09:14:22Z, go1.25.13, linux/amd64)
 ```
 
 [releases]: https://github.com/zishaan1911/Helmsman/releases/latest
