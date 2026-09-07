@@ -37,10 +37,20 @@ CLIs are what most people depend on.
 
 ### Fixed
 
-- **The Pages deploy could never run on a fresh repository.**
-  `actions/configure-pages` failed with `Get Pages site failed … Not Found`
-  because Pages had not been switched on by hand in Settings. It now passes
-  `enablement: true`, so the workflow turns Pages on itself.
+- **The Pages deploy failed on a repository where Pages had never been
+  enabled**, with `Get Pages site failed … Not Found` from
+  `actions/configure-pages`. Enabling Pages is a one-time click in Settings
+  (→ Pages → Source: GitHub Actions) and cannot be automated from the
+  workflow: creating a Pages site through the API requires repository-admin
+  rights, which the default `GITHUB_TOKEN` does not carry regardless of what
+  `permissions:` declares. The action's `enablement: true` option therefore
+  fails with `Resource not accessible by integration` unless it is handed a
+  personal access token with admin scope.
+
+  Rather than store an admin PAT as a secret to save one click, the workflow
+  now checks whether Pages is enabled before doing anything else, and fails
+  with the setting to change and a link to it — instead of an `HttpError`
+  that explains nothing.
 
 ## [1.0.0] - 2026-09-07
 

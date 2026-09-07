@@ -57,14 +57,33 @@ jobs:
           done
           exit $status
 
-      # enablement: true turns Pages on via the API if it isn't already,
-      # instead of failing with "Get Pages site failed … Not Found". Without
-      # it this workflow can only ever run after someone has clicked through
-      # Settings → Pages by hand, which is a poor thing for a deploy to
-      # depend on. The `pages: write` permission above is what authorises it.
+      # Pages has to be switched on once, by hand, before this workflow can
+      # deploy anything. `enablement: true` looks like it removes that step
+      # and doesn't: creating a Pages site through the API needs
+      # repository-admin rights, and the default GITHUB_TOKEN does not have
+      # them no matter what `permissions:` declares — it fails with
+      # "Resource not accessible by integration". The only ways around it
+      # are a personal access token with admin scope stored as a secret, or
+      # one click in Settings. One click wins.
+      #
+      # So: check first, and say what to do, rather than letting
+      # configure-pages fail with an HttpError that explains nothing.
+      - name: Pages must be enabled
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh api "repos/${GITHUB_REPOSITORY}/pages" >/dev/null 2>&1; then
+            echo "GitHub Pages is enabled."
+            exit 0
+          fi
+          echo "::error::GitHub Pages is not enabled for this repository."
+          echo ""
+          echo "Enable it once, then re-run this workflow:"
+          echo "  Settings → Pages → Build and deployment → Source: GitHub Actions"
+          echo "  https://github.com/${GITHUB_REPOSITORY}/settings/pages"
+          exit 1
+
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
