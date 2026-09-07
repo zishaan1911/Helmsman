@@ -169,12 +169,25 @@ func RevertLastCommit(req RevertRequest) (WriteResult, error) {
 		return WriteResult{}, fmt.Errorf("GitopsRepoPath is required")
 	}
 
-	args := []string{"revert", "--no-edit", "HEAD"}
-	if req.CommitMessage != "" {
-		args = []string{"revert", "--no-edit", "-m", req.CommitMessage, "HEAD"}
-	}
-	if err := runGit(req.GitopsRepoPath, args...); err != nil {
-		return WriteResult{}, fmt.Errorf("git revert: %w", err)
+	// With no custom message, let git write its own "Revert ..." subject.
+	// With one, stage the revert without committing and then commit it
+	// ourselves — `git revert -m` means "mainline parent number", not
+	// "message", so passing the message there either errors out or, on a
+	// merge commit, reverts against the wrong parent.
+	if req.CommitMessage == "" {
+		if err := runGit(req.GitopsRepoPath, "revert", "--no-edit", "HEAD"); err != nil {
+			return WriteResult{}, fmt.Errorf("git revert: %w", err)
+		}
+	} else {
+		if err := runGit(req.GitopsRepoPath, "revert", "--no-commit", "HEAD"); err != nil {
+			return WriteResult{}, fmt.Errorf("git revert: %w", err)
+		}
+		if err := runGit(req.GitopsRepoPath, "commit", "-m", req.CommitMessage); err != nil {
+			// Leave no half-applied revert behind for the next run to
+			// trip over.
+			_ = runGit(req.GitopsRepoPath, "revert", "--quit")
+			return WriteResult{}, fmt.Errorf("committing revert: %w", err)
+		}
 	}
 
 	sha, err := gitOutput(req.GitopsRepoPath, "rev-parse", "HEAD")
