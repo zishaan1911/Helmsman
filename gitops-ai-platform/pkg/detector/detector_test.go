@@ -86,3 +86,10 @@ func TestDetectPythonFlask(t *testing.T) {
 		t.Errorf("Port = %d, want 5000", info.Port)
 	}
 }
+
+func mkdirAll(t *testing.T, dir, rel string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Join(dir, rel), 0o755); err != nil {
+		t.Fatalf("creating %s: %v", rel, err)
+	}
+}
