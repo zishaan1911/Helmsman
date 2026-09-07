@@ -1,5 +1,6 @@
-# gitops-ai-platform
+# Helmsman — `gitops-ai-platform`
 
+The Go module behind [Helmsman](https://zishaan1911.github.io/Helmsman/).
 Push code → get a running app, deployed via GitOps, watched and self-healed by AI.
 
 ```
@@ -109,9 +110,19 @@ Every field is optional — omitted fields fall back to platform defaults
 ## Testing
 
 ```bash
-go build ./...
-go vet ./...
-go test ./... -v
+make check    # gofmt + vet + build + race-enabled tests
+make cover    # the same, with a coverage profile and summary
+make demo     # run the whole pipeline against examples/sample-app
 ```
 
-`pkg/gemini`, `pkg/riskreview`, and `pkg/healthwatcher`'s pure logic are all covered by tests that mock the Gemini API (`httptest`) or feed synthetic `kubectl`-shaped JSON — no live cluster or API key needed to run the suite. End-to-end pipeline behavior (Dockerfile/manifest generation, GitOps commits) is best verified by running `cmd/pipeline` against `examples/sample-app` and inspecting the output directly.
+`make help` lists every target. All of them are plain `go` commands; the
+Makefile just stops them from being retyped differently in four places.
+
+The whole suite runs with no cluster and no API key. `pkg/gemini`,
+`pkg/riskreview` and `pkg/healthwatcher` mock the Gemini API with `httptest` or
+feed synthetic `kubectl`-shaped JSON; `pkg/gitopswriter` and `internal/e2e`
+drive a real throwaway Git repo in a temp directory.
+
+`internal/e2e` wires the packages together in `cmd/pipeline`'s order and runs
+them against `examples/sample-app`, so the example is verified on every run
+rather than only when someone remembers to try it by hand.

@@ -1,4 +1,31 @@
-# AI-Powered GitOps Deployment Platform
+<p align="center">
+  <img src="docs/assets/helmsman-logo.svg" alt="Helmsman" width="300">
+</p>
+
+<h1 align="center">Helmsman</h1>
+
+<p align="center">
+  <b>Push code. Helmsman takes the wheel.</b><br>
+  GitOps deployment with an AI risk gate and self-healing rollback.
+</p>
+
+<p align="center">
+  <a href="https://zishaan1911.github.io/Helmsman/"><b>Website</b></a> ·
+  <a href="gitops-ai-platform/docs/ARCHITECTURE.md">Architecture</a> ·
+  <a href="gitops-ai-platform/docs/DEPLOYMENT.md">Deployment</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/zishaan1911/Helmsman/actions/workflows/ci.yml"><img src="https://github.com/zishaan1911/Helmsman/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/zishaan1911/Helmsman/actions/workflows/codeql.yml"><img src="https://github.com/zishaan1911/Helmsman/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"></a>
+  <a href="https://github.com/zishaan1911/Helmsman/releases/latest"><img src="https://img.shields.io/github/v/release/zishaan1911/Helmsman?color=4FD3CB&label=release" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/go-1.23%2B-4FD3CB" alt="Go 1.23+">
+  <img src="https://img.shields.io/badge/dependencies-0-4FD3CB" alt="Zero dependencies">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-4FD3CB" alt="MIT"></a>
+</p>
+
+---
 
 Push code → get a running app, deployed via GitOps, watched and self-healed by AI.
 
@@ -78,6 +105,14 @@ repo, triggered by deterministic health rules.
 
 All ten weeks of the original roadmap are implemented. See
 [`CONTRIBUTING.md`](CONTRIBUTING.md) if you want to build on it.
+
+## The name
+
+A helmsman steers the ship but does not decide where it goes — the course
+comes from somewhere else, and the helmsman holds it, watches the water, and
+corrects when something drifts. That is the shape of this tool: you decide what
+ships by pushing a commit; Helmsman holds the course, watches the rollout, and
+corrects when it goes wrong.
 
 ## License
 

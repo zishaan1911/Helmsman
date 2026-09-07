@@ -1,0 +1,67 @@
+name: Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never cancel a deploy midway; queue instead.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy the landing page
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # The page is a single self-contained file plus SVGs; there is
+      # nothing to build. This step only guards against publishing a
+      # broken or incomplete site.
+      - name: Sanity-check the site
+        run: |
+          set -e
+          test -f docs/index.html
+          test -f docs/.nojekyll
+          for asset in favicon.svg helmsman-mark.svg helmsman-logo.svg; do
+            test -f "docs/assets/$asset" || { echo "::error::missing docs/assets/$asset"; exit 1; }
+          done
+          grep -q "<title>" docs/index.html
+
+          # Every local href/src in the page must resolve inside docs/.
+          # A 404 on the favicon or a stale asset path is exactly the kind
+          # of thing nobody notices after a deploy.
+          status=0
+          for ref in $(grep -oE '(href|src)="[^"#:]+"' docs/index.html \
+                        | sed -E 's/^(href|src)="//; s/"$//' | sort -u); do
+            case "$ref" in
+              http*|//*|mailto:*) continue ;;
+            esac
+            if [ ! -e "docs/$ref" ]; then
+              echo "::error::broken local reference: $ref"
+              status=1
+            fi
+          done
+          exit $status
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
