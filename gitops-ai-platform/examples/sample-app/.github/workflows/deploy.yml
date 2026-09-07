@@ -32,13 +32,13 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up platform CLIs
-        uses: docker://ghcr.io/your-org/gitops-ai-platform:latest
+        uses: docker://ghcr.io/zishaan1911/helmsman:v1.0.0
         with:
           entrypoint: /bin/true # no-op; image is pulled for use below
 
       - name: Generate candidate manifest (no commit)
         run: |
-          docker run --rm -v "$PWD:/repo" ghcr.io/your-org/gitops-ai-platform:latest \
+          docker run --rm -v "$PWD:/repo" ghcr.io/zishaan1911/helmsman:v1.0.0 \
             /app/manifest-generator -repo /repo -app "$APP_NAME" -image "$IMAGE:pr-${{ github.event.pull_request.number }}" \
             > /tmp/candidate.txt
           awk '/--- deployment.yaml ---/{flag=1;next}/--- service.yaml ---/{flag=0}flag' /tmp/candidate.txt > /tmp/deployment.yaml
@@ -47,7 +47,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          docker run --rm -e GEMINI_API_KEY -v /tmp:/tmp ghcr.io/your-org/gitops-ai-platform:latest \
+          docker run --rm -e GEMINI_API_KEY -v /tmp:/tmp ghcr.io/zishaan1911/helmsman:v1.0.0 \
             /app/risk-reviewer -app "$APP_NAME" -new /tmp/deployment.yaml
 
   # Runs on push to main: full pipeline, gated by the same risk check
@@ -75,7 +75,7 @@ jobs:
       - name: Run pipeline (detect, containerize already done above, generate manifests)
         run: |
           docker run --rm -v "$PWD/app-repo:/app-repo" -v "$PWD/gitops-repo:/gitops-repo" \
-            ghcr.io/your-org/gitops-ai-platform:latest \
+            ghcr.io/zishaan1911/helmsman:v1.0.0 \
             /app/pipeline -app-repo /app-repo -gitops-repo /gitops-repo \
             -app "$APP_NAME" -image "$IMAGE_TAG" -env staging
 
@@ -84,7 +84,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           docker run --rm -e GEMINI_API_KEY -v "$PWD/gitops-repo:/gitops-repo" \
-            ghcr.io/your-org/gitops-ai-platform:latest \
+            ghcr.io/zishaan1911/helmsman:v1.0.0 \
             /app/risk-reviewer -app "$APP_NAME" -new /gitops-repo/apps/$APP_NAME/staging/deployment.yaml
 
       - name: Push to GitOps repo

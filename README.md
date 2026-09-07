@@ -51,32 +51,58 @@ there:
 | [`gitops-ai-platform/docs/ARCHITECTURE.md`](gitops-ai-platform/docs/ARCHITECTURE.md) | Why the pipeline is shaped this way, and where AI is and isn't used |
 | [`gitops-ai-platform/docs/DEPLOYMENT.md`](gitops-ai-platform/docs/DEPLOYMENT.md) | Taking it from this repo to a real cluster |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Build, test, and PR conventions |
+| [`CHANGELOG.md`](CHANGELOG.md) | What changed in each release |
 | [`SECURITY.md`](SECURITY.md) | Reporting a vulnerability |
+
+## Install
+
+Download an archive from [the latest release][releases] — each one contains
+all seven CLIs — or:
+
+```bash
+# One command, with Go 1.23+
+go install github.com/zishaan1911/Helmsman/gitops-ai-platform/cmd/pipeline@v1.0.0
+
+# Or the container image, which carries all seven plus git and kubectl
+docker pull ghcr.io/zishaan1911/helmsman:v1.0.0
+```
+
+Every binary reports what it is:
+
+```console
+$ pipeline -version
+helmsman pipeline v1.0.0 (commit 9f3c1b2a4d5e, built 2026-09-07T09:14:22Z, go1.23.0, linux/amd64)
+```
+
+[releases]: https://github.com/zishaan1911/Helmsman/releases/latest
 
 ## Quickstart
 
 ```bash
 git clone https://github.com/zishaan1911/Helmsman.git
 cd Helmsman/gitops-ai-platform
-go build ./...
-go test ./...
+make check   # gofmt, vet, build, race-enabled tests
 ```
 
-Run the full pipeline against the bundled example app, with a throwaway
+Then run the whole pipeline against the bundled example app in a throwaway
 GitOps repo — no cluster and no API key required:
 
 ```bash
-git init /tmp/gitops-repo && git -C /tmp/gitops-repo commit --allow-empty -m init
+make demo
+```
 
-go run ./cmd/pipeline \
-  -app-repo ./examples/sample-app \
+That creates a scratch repo, runs all four stages against
+`examples/sample-app`, and shows you the commit it produced. To point it at
+your own service, build the binaries with `make binaries` and run:
+
+```bash
+./bin/pipeline \
+  -app-repo ../my-service \
   -gitops-repo /tmp/gitops-repo \
-  -app sample-app \
-  -image registry.example.com/sample-app:sha-abc123 \
+  -app my-service \
+  -image ghcr.io/acme/my-service:sha-9f3c1b \
   -env staging \
-  -gitops-repo-url https://github.com/you/gitops-repo.git
-
-git -C /tmp/gitops-repo show --stat
+  -gitops-repo-url https://github.com/acme/gitops-repo.git
 ```
 
 ## Where AI is used — and where it deliberately isn't
@@ -103,8 +129,14 @@ repo, triggered by deterministic health rules.
 
 ## Status
 
-All ten weeks of the original roadmap are implemented. See
-[`CONTRIBUTING.md`](CONTRIBUTING.md) if you want to build on it.
+**v1.0.0** — released, tested and installable. The whole roadmap is
+implemented, coverage over `./pkg/...` is 85.7%, and CI runs the pipeline end
+to end against the bundled example on every push.
+
+Under semantic versioning, what's stable here is the CLI flags, the
+`platform.yaml` schema, the shape of the generated manifests, and the layout
+written into the GitOps repo — see [`CHANGELOG.md`](CHANGELOG.md). If you want
+to build on it, [`CONTRIBUTING.md`](CONTRIBUTING.md) has the conventions.
 
 ## The name
 

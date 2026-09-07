@@ -1,0 +1,246 @@
+# Release build for Helmsman.
+#
+# The Go module lives in gitops-ai-platform/, so every build sets `dir`.
+# All seven CLIs go into a single archive per platform, matching the
+# container image, which also carries all seven — nobody should have to
+# work out which download contains health-watcher.
+#
+# The builds are written out rather than sharing a YAML anchor: GoReleaser
+# rejects unknown top-level keys, which is where an anchor would have to
+# live, and a config that fails only at tag time is not worth the brevity.
+version: 2
+
+project_name: helmsman
+
+before:
+  hooks:
+    - go -C gitops-ai-platform mod tidy
+    - go -C gitops-ai-platform vet ./...
+    - go -C gitops-ai-platform test ./...
+
+builds:
+  - id: pipeline
+    dir: gitops-ai-platform
+    main: ./cmd/pipeline
+    binary: pipeline
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    # -trimpath keeps absolute build paths out of the binary, so the same
+    # commit built on two machines produces the same bytes.
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Version={{ .Version }}
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Commit={{ .FullCommit }}
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Date={{ .CommitDate }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+  - id: risk-reviewer
+    dir: gitops-ai-platform
+    main: ./cmd/risk-reviewer
+    binary: risk-reviewer
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    # -trimpath keeps absolute build paths out of the binary, so the same
+    # commit built on two machines produces the same bytes.
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Version={{ .Version }}
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Commit={{ .FullCommit }}
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Date={{ .CommitDate }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+  - id: health-watcher
+    dir: gitops-ai-platform
+    main: ./cmd/health-watcher
+    binary: health-watcher
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    # -trimpath keeps absolute build paths out of the binary, so the same
+    # commit built on two machines produces the same bytes.
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Version={{ .Version }}
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Commit={{ .FullCommit }}
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Date={{ .CommitDate }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+  - id: detector
+    dir: gitops-ai-platform
+    main: ./cmd/detector
+    binary: detector
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    # -trimpath keeps absolute build paths out of the binary, so the same
+    # commit built on two machines produces the same bytes.
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Version={{ .Version }}
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Commit={{ .FullCommit }}
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Date={{ .CommitDate }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+  - id: containerizer
+    dir: gitops-ai-platform
+    main: ./cmd/containerizer
+    binary: containerizer
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    # -trimpath keeps absolute build paths out of the binary, so the same
+    # commit built on two machines produces the same bytes.
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Version={{ .Version }}
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Commit={{ .FullCommit }}
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Date={{ .CommitDate }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+  - id: manifest-generator
+    dir: gitops-ai-platform
+    main: ./cmd/manifest-generator
+    binary: manifest-generator
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    # -trimpath keeps absolute build paths out of the binary, so the same
+    # commit built on two machines produces the same bytes.
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Version={{ .Version }}
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Commit={{ .FullCommit }}
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Date={{ .CommitDate }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+  - id: gitops-writer
+    dir: gitops-ai-platform
+    main: ./cmd/gitops-writer
+    binary: gitops-writer
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    # -trimpath keeps absolute build paths out of the binary, so the same
+    # commit built on two machines produces the same bytes.
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Version={{ .Version }}
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Commit={{ .FullCommit }}
+      - -X github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version.Date={{ .CommitDate }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: helmsman
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - LICENSE
+      - README.md
+      - src: gitops-ai-platform/docs/*.md
+        dst: docs
+      - src: gitops-ai-platform/deploy/manifests/*.yaml
+        dst: deploy/manifests
+      - src: gitops-ai-platform/examples/sample-app/platform.yaml
+        dst: examples
+
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+  algorithm: sha256
+
+source:
+  enabled: true
+  name_template: "{{ .ProjectName }}_{{ .Version }}_source"
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-dev-{{ .ShortCommit }}"
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^ci:"
+      - "merge conflict"
+      - Merge pull request
+      - Merge branch
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 0
+    - title: Fixes
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
+      order: 1
+    - title: Refactors
+      regexp: '^.*?refactor(\(.+\))??!?:.+$'
+      order: 2
+    - title: Other
+      order: 99
+
+release:
+  github:
+    owner: zishaan1911
+    name: Helmsman
+  draft: false
+  prerelease: auto
+  mode: replace
+  header: |
+    ## Helmsman {{ .Tag }}
+
+    Push code, get a running app — deployed via GitOps, risk-reviewed by AI,
+    and rolled back on its own when a rollout goes wrong.
+
+    Every archive contains all seven CLIs. The container image below carries
+    the same seven, plus `git` and `kubectl`.
+  footer: |
+    ---
+
+    ### Install
+
+    ```bash
+    go install github.com/zishaan1911/Helmsman/gitops-ai-platform/cmd/pipeline@{{ .Tag }}
+    ```
+
+    Or grab an archive above, or pull the image:
+
+    ```bash
+    docker pull ghcr.io/zishaan1911/helmsman:{{ .Tag }}
+    ```
+
+    Verify a download against `helmsman_{{ .Version }}_checksums.txt`, then
+    check what you got:
+
+    ```bash
+    ./pipeline -version
+    ```
+
+    **Full documentation:** <https://zishaan1911.github.io/Helmsman/>

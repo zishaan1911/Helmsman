@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version"
 	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/gemini"
 	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/gitopswriter"
 	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/healthwatcher"
@@ -33,7 +34,9 @@ func main() {
 	gitopsRepo := flag.String("gitops-repo", "", "path to a locally cloned GitOps repo (required if -auto-rollback)")
 	autoRollback := flag.Bool("auto-rollback", false, "revert the last GitOps commit if the rollout is unhealthy")
 	push := flag.Bool("push", false, "push the revert commit after creating it")
+	showVersion := version.Flag()
 	flag.Parse()
+	version.Exit(*showVersion, "health-watcher")
 
 	if *namespace == "" || *appName == "" {
 		fmt.Fprintln(os.Stderr, "health-watcher: -namespace and -app are required")
