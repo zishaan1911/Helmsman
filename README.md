@@ -19,10 +19,10 @@
 <p align="center">
   <a href="https://github.com/zishaan1911/Helmsman/actions/workflows/ci.yml"><img src="https://github.com/zishaan1911/Helmsman/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/zishaan1911/Helmsman/actions/workflows/codeql.yml"><img src="https://github.com/zishaan1911/Helmsman/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"></a>
-  <a href="https://github.com/zishaan1911/Helmsman/releases/latest"><img src="https://img.shields.io/github/v/release/zishaan1911/Helmsman?color=4FD3CB&label=release" alt="Latest release"></a>
-  <img src="https://img.shields.io/badge/go-1.23%2B-4FD3CB" alt="Go 1.23+">
-  <img src="https://img.shields.io/badge/dependencies-0-4FD3CB" alt="Zero dependencies">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-4FD3CB" alt="MIT"></a>
+  <a href="https://github.com/zishaan1911/Helmsman/releases/latest"><img src="https://img.shields.io/github/v/release/zishaan1911/Helmsman?color=3a3a3c&label=release" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/go-1.23%2B-3a3a3c" alt="Go 1.23+">
+  <img src="https://img.shields.io/badge/dependencies-0-3a3a3c" alt="Zero dependencies">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-3a3a3c" alt="MIT"></a>
 </p>
 
 ---

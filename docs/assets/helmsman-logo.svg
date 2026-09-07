@@ -3,6 +3,7 @@
   <g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round">
     <circle cx="32" cy="32" r="22"/>
     <path d="M32.0 24.5 L32.0 10.0"/>
+    <path d="M32.0 10.0 L32.0 3.5"/>
     <path d="M37.3 26.7 L47.56 16.44"/>
     <path d="M39.5 32.0 L54.0 32.0"/>
     <path d="M37.3 37.3 L47.56 47.56"/>
@@ -18,7 +19,6 @@
     <path d="M10.0 32.0 L3.5 32.0"/>
     <path d="M16.44 16.44 L11.85 11.85"/>
   </g>
-  <path d="M32.0 10.0 L32.0 3.5" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
   <circle cx="32" cy="32" r="6.5" fill="currentColor"/>
   <text x="80" y="34" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Inter, Helvetica, Arial, sans-serif"
         font-size="27" font-weight="640" letter-spacing="-0.7" fill="currentColor">Helmsman</text>
