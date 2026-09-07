@@ -1,0 +1,181 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build the release without publishing anything"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: "1.23.x"
+  IMAGE: ghcr.io/${{ github.repository_owner }}/helmsman
+
+jobs:
+  # A tag is not a promise that the code was green. Re-run the full suite
+  # against the tagged commit before anything is published, because a
+  # published artifact cannot be unpublished from someone's CI cache.
+  verify:
+    name: Verify the tagged commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: gitops-ai-platform/go.mod
+
+      - name: Configure git identity for tests
+        run: |
+          git config --global user.email "ci@example.com"
+          git config --global user.name "CI"
+          git config --global init.defaultBranch main
+
+      - name: make check
+        working-directory: gitops-ai-platform
+        run: make check
+
+      - name: Coverage gate
+        working-directory: gitops-ai-platform
+        run: make cover-check
+
+      - name: govulncheck
+        working-directory: gitops-ai-platform
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
+      # The tag and the CHANGELOG must agree, or the release notes describe
+      # a different version than the one being shipped.
+      - name: The CHANGELOG has an entry for this tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          if ! grep -qE "^## \[${tag#v}\]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no '## [${tag#v}]' section for tag ${tag}"
+            exit 1
+          fi
+
+  binaries:
+    name: Binaries and GitHub release
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # GoReleaser needs the full history to build a changelog.
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: gitops-ai-platform/go.mod
+
+      - name: Configure git identity
+        run: |
+          git config --global user.email "ci@example.com"
+          git config --global user.name "CI"
+          git config --global init.defaultBranch main
+
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: >-
+            ${{ (startsWith(github.ref, 'refs/tags/v') && !inputs.dry_run)
+                && 'release --clean'
+                || 'release --clean --snapshot --skip=publish' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts from a dry run
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') || inputs.dry_run }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: |
+            dist/*.tar.gz
+            dist/*.zip
+            dist/*checksums.txt
+          retention-days: 7
+
+  image:
+    name: Container image
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to ghcr.io
+        if: ${{ startsWith(github.ref, 'refs/tags/v') && !inputs.dry_run }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: gitops-ai-platform
+          file: gitops-ai-platform/deploy/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ startsWith(github.ref, 'refs/tags/v') && !inputs.dry_run }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ github.ref_type == 'tag' && github.ref_name || 'dev' }}
+            COMMIT=${{ github.sha }}
+            DATE=${{ github.event.repository.updated_at }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Proving the image actually runs is the whole point of building it
+      # here rather than trusting the Dockerfile.
+      - name: Smoke-test the image
+        run: |
+          docker build \
+            --build-arg VERSION="${GITHUB_REF_NAME}" \
+            --build-arg COMMIT="${GITHUB_SHA}" \
+            -f gitops-ai-platform/deploy/Dockerfile \
+            -t helmsman:smoke gitops-ai-platform
+
+          for cmd in pipeline risk-reviewer health-watcher detector \
+                     containerizer manifest-generator gitops-writer; do
+            echo "--- $cmd"
+            docker run --rm --entrypoint "/app/$cmd" helmsman:smoke -version
+          done
+
+          # The tools the CLIs shell out to have to be present, or
+          # health-watcher and gitops-writer fail at the worst moment.
+          docker run --rm --entrypoint git helmsman:smoke --version
+          docker run --rm --entrypoint kubectl helmsman:smoke version --client
+
+          # And it must not be running as root.
+          uid="$(docker run --rm --entrypoint id helmsman:smoke -u)"
+          test "$uid" = "10001" || { echo "::error::image runs as uid $uid"; exit 1; }
