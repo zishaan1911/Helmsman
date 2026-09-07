@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version"
 	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/containerizer"
 	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/detector"
 	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/gitopswriter"
@@ -36,7 +37,9 @@ func main() {
 	env := flag.String("env", "staging", "deployment environment")
 	gitopsRepoURL := flag.String("gitops-repo-url", "", "GitOps repo URL, used only to render the ArgoCD Application (optional)")
 	push := flag.Bool("push", false, "push the GitOps commit after writing it")
+	showVersion := version.Flag()
 	flag.Parse()
+	version.Exit(*showVersion, "pipeline")
 
 	if *appRepo == "" || *gitopsRepo == "" || *appName == "" || *image == "" {
 		fmt.Fprintln(os.Stderr, "pipeline: -app-repo, -gitops-repo, -app, and -image are required")

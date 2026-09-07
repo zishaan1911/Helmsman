@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version"
 	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/gitopswriter"
 	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/manifest"
 )
@@ -23,7 +24,9 @@ func main() {
 	manifestsDir := flag.String("manifests-dir", "", "directory containing deployment.yaml/service.yaml/ingress.yaml/kustomization.yaml (required)")
 	push := flag.Bool("push", false, "push after committing")
 	dryRun := flag.Bool("dry-run", false, "write files without committing")
+	showVersion := version.Flag()
 	flag.Parse()
+	version.Exit(*showVersion, "gitops-writer")
 
 	if *gitopsRepo == "" || *appName == "" || *manifestsDir == "" {
 		fmt.Fprintln(os.Stderr, "gitops-writer: -gitops-repo, -app, and -manifests-dir are required")

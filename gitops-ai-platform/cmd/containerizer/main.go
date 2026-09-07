@@ -7,13 +7,16 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version"
 	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/containerizer"
 	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/detector"
 )
 
 func main() {
 	repo := flag.String("repo", ".", "path to the application repository")
+	showVersion := version.Flag()
 	flag.Parse()
+	version.Exit(*showVersion, "containerizer")
 
 	info, err := detector.Detect(*repo)
 	if err != nil {

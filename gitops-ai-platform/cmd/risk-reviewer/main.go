@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version"
 	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/gemini"
 	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/riskreview"
 )
@@ -28,7 +29,9 @@ func main() {
 	newPath := flag.String("new", "", "path to the new deployment.yaml (required)")
 	oldPath := flag.String("old", "", "path to the previous deployment.yaml (optional — omit for a first deploy)")
 	jsonOut := flag.Bool("json", false, "print machine-readable JSON instead of a human summary")
+	showVersion := version.Flag()
 	flag.Parse()
+	version.Exit(*showVersion, "risk-reviewer")
 
 	if *appName == "" || *newPath == "" {
 		fmt.Fprintln(os.Stderr, "risk-reviewer: -app and -new are required")

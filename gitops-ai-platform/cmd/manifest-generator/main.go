@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/zishaan1911/Helmsman/gitops-ai-platform/internal/version"
 	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/detector"
 	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/manifest"
 	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/platformconfig"
@@ -18,7 +19,9 @@ func main() {
 	image := flag.String("image", "", "container image, e.g. registry/app:sha (required)")
 	env := flag.String("env", "staging", "deployment environment")
 	namespace := flag.String("namespace", "", "target namespace (defaults to app name)")
+	showVersion := version.Flag()
 	flag.Parse()
+	version.Exit(*showVersion, "manifest-generator")
 
 	if *appName == "" || *image == "" {
 		fmt.Fprintln(os.Stderr, "manifest-generator: -app and -image are required")
