@@ -136,12 +136,23 @@ func isClean(repoPath string) (bool, error) {
 	return false, fmt.Errorf("git diff --cached: %w", err)
 }
 
+// runGit runs a git subcommand in repoPath. Output is captured rather than
+// forwarded to the process's own stdout/stderr: this package is a library
+// used by CLIs that print structured results, and interleaving raw git
+// chatter into that output makes it unparseable. On failure the captured
+// output is folded into the error, which is where it is actually useful.
 func runGit(repoPath string, args ...string) error {
 	cmd := exec.Command("git", args...)
 	cmd.Dir = repoPath
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		trimmed := strings.TrimSpace(string(out))
+		if trimmed == "" {
+			return fmt.Errorf("git %s: %w", strings.Join(args, " "), err)
+		}
+		return fmt.Errorf("git %s: %w: %s", strings.Join(args, " "), err, trimmed)
+	}
+	return nil
 }
 
 func gitOutput(repoPath string, args ...string) (string, error) {
