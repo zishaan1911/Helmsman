@@ -1,11 +1,27 @@
 version: 2
 updates:
+  # The Go module lives in gitops-ai-platform/, not at the repo root.
   - package-ecosystem: "gomod"
-    directory: "/"
+    directory: "/gitops-ai-platform"
     schedule:
       interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    commit-message:
+      prefix: "ci(deps)"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "docker"
+    directory: "/gitops-ai-platform/deploy"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"

@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/example/gitops-ai-platform/pkg/gemini"
-	"github.com/example/gitops-ai-platform/pkg/riskreview"
+	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/gemini"
+	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/riskreview"
 )
 
 func main() {

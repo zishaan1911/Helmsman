@@ -9,45 +9,177 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GO_VERSION: "1.23.x"
+
+defaults:
+  run:
+    working-directory: gitops-ai-platform
+
 jobs:
-  build-and-test:
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: actions/setup-go@v5
         with:
-          go-version: "1.25.8"
-          cache: true
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: gitops-ai-platform/go.mod
 
-      - name: gofmt check
-        working-directory: gitops-ai-platform
+      - name: gofmt
         run: |
           fmt_out="$(gofmt -l .)"
           if [ -n "$fmt_out" ]; then
-            echo "The following files are not gofmt'd:"
+            echo "::error::These files are not gofmt'd:"
             echo "$fmt_out"
+            gofmt -d .
             exit 1
           fi
 
       - name: go vet
-        working-directory: gitops-ai-platform
         run: go vet ./...
 
+      - name: go mod tidy is clean
+        run: |
+          go mod tidy
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::go.mod/go.sum are not tidy — run 'go mod tidy' and commit the result."
+            git status --porcelain
+            git diff
+            exit 1
+          fi
+
+  test:
+    name: Test (Go ${{ matrix.go }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        go: ["1.23.x", "1.24.x"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+          cache-dependency-path: gitops-ai-platform/go.mod
+
+      # pkg/gitopswriter shells out to git; give it a committer identity so
+      # `git commit` works on a bare runner.
+      - name: Configure git identity for tests
+        run: |
+          git config --global user.email "ci@example.com"
+          git config --global user.name "CI"
+          git config --global init.defaultBranch main
+
       - name: Build
-        working-directory: gitops-ai-platform
         run: go build ./...
 
       - name: Test
-        working-directory: gitops-ai-platform
-        run: go test ./... -v
+        run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+
+      - name: Coverage summary
+        if: matrix.os == 'ubuntu-latest' && matrix.go == '1.23.x'
+        run: |
+          go tool cover -func=coverage.out | tee /tmp/cover.txt
+          total="$(grep -E '^total:' /tmp/cover.txt | awk '{print $3}')"
+          {
+            echo "### Coverage: ${total}"
+            echo ""
+            echo '```'
+            cat /tmp/cover.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage profile
+        if: matrix.os == 'ubuntu-latest' && matrix.go == '1.23.x'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: gitops-ai-platform/coverage.out
+
+  vuln:
+    name: govulncheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: gitops-ai-platform/go.mod
 
       - name: govulncheck
-        # TEMPORARY: make govulncheck non-blocking so the rest of CI can proceed while we triage vuln findings.
-        continue-on-error: true
-        working-directory: gitops-ai-platform
         run: |
           go install golang.org/x/vuln/cmd/govulncheck@latest
           govulncheck ./...
+
+  smoke:
+    name: End-to-end smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: gitops-ai-platform/go.mod
+
+      - name: Run the pipeline against the bundled example app
+        run: |
+          git config --global user.email "ci@example.com"
+          git config --global user.name "CI"
+          git init -q -b main /tmp/gitops-repo
+          git -C /tmp/gitops-repo commit -q --allow-empty -m init
+
+          # Copy the example out of the tree first: the containerizer writes
+          # a Dockerfile into the app repo it is given, and CI should not be
+          # mutating its own checkout.
+          cp -r ./examples/sample-app /tmp/sample-app
+
+          go run ./cmd/pipeline \
+            -app-repo /tmp/sample-app \
+            -gitops-repo /tmp/gitops-repo \
+            -app sample-app \
+            -image registry.example.com/sample-app:sha-ci \
+            -env staging \
+            -gitops-repo-url https://github.com/you/gitops-repo.git
+
+      - name: Assert the GitOps repo actually received a commit
+        run: |
+          set -e
+          for f in deployment.yaml service.yaml kustomization.yaml; do
+            test -f "/tmp/gitops-repo/apps/sample-app/staging/$f" \
+              || { echo "::error::missing $f"; exit 1; }
+          done
+          test -n "$(git -C /tmp/gitops-repo log --oneline -1 --grep=sample-app)" \
+            || { echo "::error::no commit was made to the GitOps repo"; exit 1; }
+          git -C /tmp/gitops-repo show --stat HEAD
+
+      - name: Static risk review must pass on our own generated manifest
+        run: |
+          go run ./cmd/risk-reviewer \
+            -app sample-app \
+            -new /tmp/gitops-repo/apps/sample-app/staging/deployment.yaml
+
+      - name: The checkout must be unmodified
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::the pipeline run modified the repository checkout"
+            git status --porcelain
+            exit 1
+          fi
+
+      - name: The generated Dockerfile must be non-root and multi-stage
+        run: |
+          test -f /tmp/sample-app/Dockerfile
+          grep -q "USER appuser" /tmp/sample-app/Dockerfile
+          grep -q "AS deps" /tmp/sample-app/Dockerfile
+          cat /tmp/sample-app/Dockerfile

@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/example/gitops-ai-platform/pkg/detector"
+	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/detector"
 )
 
 func main() {

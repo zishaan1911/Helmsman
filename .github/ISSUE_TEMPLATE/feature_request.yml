@@ -1,0 +1,40 @@
+name: Feature request
+description: Propose a change or addition
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you hitting?
+      description: >
+        Describe the situation, not the solution. What are you trying to
+        deploy, and where does the platform get in your way today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like it to do?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What have you tried or considered?
+      description: >
+        Including `platform.yaml` overrides, or doing it in your own CI around
+        the CLIs.
+
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Constraints you've checked against
+      description: >
+        These are deliberate design rules (see CONTRIBUTING.md). A proposal
+        that breaks one isn't automatically rejected, but it needs a case.
+      options:
+        - label: This does not require adding a third-party Go dependency.
+        - label: This does not require the platform to mutate a cluster directly (everything goes through a GitOps commit).
+        - label: This does not move a deterministic decision behind an AI call.

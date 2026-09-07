@@ -20,7 +20,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/example/gitops-ai-platform/pkg/gemini"
+	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/gemini"
 )
 
 // PodStatus is the minimal subset of `kubectl get pods -o json` this

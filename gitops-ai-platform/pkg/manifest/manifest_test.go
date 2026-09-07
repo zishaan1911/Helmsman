@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/example/gitops-ai-platform/pkg/detector"
-	"github.com/example/gitops-ai-platform/pkg/platformconfig"
+	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/detector"
+	"github.com/zishaan1911/Helmsman/gitops-ai-platform/pkg/platformconfig"
 )
 
 func TestGenerateProducesExpectedPortAndReplicas(t *testing.T) {
